@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ClientApp
 {
@@ -18,7 +19,7 @@ namespace ClientApp
                 .Build();
 
             // Read connection settings
-            var serverDNS = configuration["ConnectionSettings:ServerDNS"];
+            var serverDNS = configuration["ConnectionSettings:ServerURL"];
             var port = configuration["ConnectionSettings:Port"];
             var clientCertPath = configuration["ConnectionSettings:ClientCertificatePath"];
             var clientCertPassword = configuration["ConnectionSettings:ClientCertificatePassword"];
@@ -39,6 +40,14 @@ namespace ClientApp
             // Load client certificate
             var clientCertificate = new X509Certificate2(clientCertPath, clientCertPassword);
 
+            // Configure logging
+            services.AddLogging(configure =>
+            {
+                configure.ClearProviders();
+                configure.AddConsole();
+                configure.SetMinimumLevel(LogLevel.Debug);
+            });
+
             // Configure the HttpClient with the base address and client certificate
             services.AddHttpClient("MyClient", client =>
             {
@@ -55,13 +64,22 @@ namespace ClientApp
 
         private static async Task UseHttpClient(IServiceProvider serviceProvider)
         {
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
             var clientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             var client = clientFactory.CreateClient("MyClient");
 
-            var response = await client.GetAsync("api/values");
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
+            try
+            {
+                var response = await client.GetAsync("api/values");
+                response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(content);
+                logger.LogInformation("Request succeeded with response: {Content}", content);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while making the request");
+            }
         }
     }
 }
