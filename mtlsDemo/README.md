@@ -23,3 +23,6 @@
 - Open Powershell in the root of ClientApp Directory and launch the executable in powershell with ./clientapp.exe
 - The request should return ["Hello","World"]
 
+# Cleanup
+- Search For Computer Certificates and remove the ServerRootCA & ClientRootCA Certs
+
