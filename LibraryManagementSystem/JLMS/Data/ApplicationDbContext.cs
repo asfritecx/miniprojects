@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using JLMS.Models; 
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace JLMS.Data
@@ -9,5 +10,7 @@ namespace JLMS.Data
             : base(options)
         {
         }
+
+        public DbSet<Book> Books { get; set; } 
     }
 }
