@@ -1,7 +1,49 @@
-﻿@{
+﻿@model IEnumerable<JLMS.Models.Book>
+
+@{
     ViewData["Title"] = "Books";
 }
 
-<div class="container-xxl">
-    <h1>Books Page</h1>
-</div>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+
+
+
+<h1>Books</h1>
+
+<table id="booksTable" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Quantity</th>
+            <th>Shelf No</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td><a href="@Url.Action("Details", "Books", new { isbn13 = book.BookISBN13 })">@book.BookTitle</a></td>
+                <td>@book.Quantity</td>
+                <td>@book.ShelfNo</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    jQuery(document).ready(function ($) {
+        $('#booksTable').DataTable({
+            pageLength: 10,
+            filter: true,
+            deferRender: true,
+            scrollY: 500,
+            scrollCollapse: true,
+            scroller: true,
+            "searching": true,
+            caseInsensitive: false,
+        });
+    });
+</script>

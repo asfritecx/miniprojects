@@ -1,4 +1,4 @@
-﻿using JLMS.Data; // Ensure you have this namespace for ApplicationDbContext
+﻿using JLMS.Data; 
 using JLMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,6 +23,25 @@ namespace JLMS.Controllers
         {
             var books = await _context.Books.ToListAsync();
             return View(books);
+        }
+
+        public async Task<IActionResult> Details(string isbn13)
+        {
+            if (isbn13 == null)
+            {
+                return NotFound();
+            }
+
+            var bookInfo = await _context.BooksExtendedInformation
+                .Include(b => b.Book)
+                .FirstOrDefaultAsync(m => m.BookISBN13 == isbn13);
+
+            if (bookInfo == null)
+            {
+                return NotFound();
+            }
+
+            return View(bookInfo);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

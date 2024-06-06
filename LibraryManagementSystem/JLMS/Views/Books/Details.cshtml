@@ -1,0 +1,21 @@
+﻿@model JLMS.Models.BooksExtendedInformation
+
+@{
+    ViewData["Title"] = "Book Details";
+}
+
+<h1>@Model.Book.BookTitle</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <img src="@Model.ImageURL" alt="@Model.Book.BookTitle" class="img-fluid">
+    </div>
+    <div class="col-md-8">
+        <h2>Author: @Model.Author</h2>
+        <p><strong>Release Date:</strong> @Model.ReleaseDate.ToString("yyyy-MM-dd")</p>
+        <p><strong>ISBN:</strong> @Model.BookISBN13</p>
+        <p><strong>Shelf No:</strong> @Model.Book.ShelfNo</p>
+        <p><strong>Quantity:</strong> @Model.Book.Quantity</p>
+        <p>@Model.Synopsis</p>
+    </div>
+</div>
