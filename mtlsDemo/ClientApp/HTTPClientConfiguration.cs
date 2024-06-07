@@ -9,9 +9,11 @@ public static class HttpClientConfiguration
         var clientCertificate = new X509Certificate2("certs/ClientCert.pfx", "password");
 
         handler.ClientCertificates.Add(clientCertificate);
+        // Validate server certificate
+        // This 3 lines are optional but shows that client will verify the certificate of the server as well 
+        // Making it more secure
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
         {
-            // Validate server certificate
             return cert.Issuer == "CN=ServerRootCA";
         };
 

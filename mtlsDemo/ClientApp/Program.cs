@@ -25,10 +25,12 @@ namespace ClientApp
             var port = configuration["ConnectionSettings:Port"];
             var clientCertPath = configuration["ConnectionSettings:ClientCertificatePath"];
             var clientCertPassword = configuration["ConnectionSettings:ClientCertificatePassword"];
+            var clientId = configuration["ClientSettings:ClientId"];
+            var clientSecret = configuration["ClientSettings:ClientSecret"];
 
             // Create service collection and configure our services
             var services = new ServiceCollection();
-            ConfigureServices(services, serverURL, port, clientCertPath, clientCertPassword);
+            ConfigureServices(services, serverURL, port, clientCertPath, clientCertPassword, clientId, clientSecret);
 
             // Generate a provider
             var serviceProvider = services.BuildServiceProvider();
@@ -37,7 +39,7 @@ namespace ClientApp
             await UseHttpClient(serviceProvider);
         }
 
-        private static void ConfigureServices(IServiceCollection services, string serverURL, string port, string clientCertPath, string clientCertPassword)
+        private static void ConfigureServices(IServiceCollection services, string serverURL, string port, string clientCertPath, string clientCertPassword, string clientId, string clientSecret)
         {
             // Load client certificate
             var clientCertificate = new X509Certificate2(clientCertPath, clientCertPassword);
@@ -54,6 +56,8 @@ namespace ClientApp
             services.AddHttpClient("MyClient", client =>
             {
                 client.BaseAddress = new Uri($"{serverURL}:{port}/");
+                client.DefaultRequestHeaders.Add("clientId", clientId);
+                client.DefaultRequestHeaders.Add("clientSecret", clientSecret);
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -86,6 +90,13 @@ namespace ClientApp
                 var postResponseContent = await postResponse.Content.ReadAsStringAsync();
                 Console.WriteLine(postResponseContent);
                 logger.LogInformation("POST request succeeded with response: {Content}", postResponseContent);
+
+                // Send POST request to restricted endpoint
+                var restrictedResponse = await client.PostAsync("api/values/restricted", null);
+                restrictedResponse.EnsureSuccessStatusCode();
+                var restrictedResponseContent = await restrictedResponse.Content.ReadAsStringAsync();
+                Console.WriteLine(restrictedResponseContent);
+                logger.LogInformation("POST to restricted endpoint succeeded with response: {Content}", restrictedResponseContent);
             }
             catch (Exception ex)
             {
