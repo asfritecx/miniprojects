@@ -3,11 +3,13 @@
 - Otherwise, there are 2 zip files in 01-Compiled folder which consists of the Server & Client Application. 
 - Both the zip files will contain the executable to demonstrate how mtls works
 
-Certificate Password : password
 # Requirements
 - Windows Based Machine
 
 # Instructions 
+
+**Certificate Password** : password
+
 - Edit your host file to point to the server change the ip address if you are trying on separate machines
 
 'c:\windows\system32\drivers\etc\hosts'
