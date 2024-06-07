@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace ClientApp
 {
@@ -19,14 +21,14 @@ namespace ClientApp
                 .Build();
 
             // Read connection settings
-            var serverDNS = configuration["ConnectionSettings:ServerURL"];
+            var serverURL = configuration["ConnectionSettings:ServerURL"];
             var port = configuration["ConnectionSettings:Port"];
             var clientCertPath = configuration["ConnectionSettings:ClientCertificatePath"];
             var clientCertPassword = configuration["ConnectionSettings:ClientCertificatePassword"];
 
             // Create service collection and configure our services
             var services = new ServiceCollection();
-            ConfigureServices(services, serverDNS, port, clientCertPath, clientCertPassword);
+            ConfigureServices(services, serverURL, port, clientCertPath, clientCertPassword);
 
             // Generate a provider
             var serviceProvider = services.BuildServiceProvider();
@@ -35,7 +37,7 @@ namespace ClientApp
             await UseHttpClient(serviceProvider);
         }
 
-        private static void ConfigureServices(IServiceCollection services, string serverDNS, string port, string clientCertPath, string clientCertPassword)
+        private static void ConfigureServices(IServiceCollection services, string serverURL, string port, string clientCertPath, string clientCertPassword)
         {
             // Load client certificate
             var clientCertificate = new X509Certificate2(clientCertPath, clientCertPassword);
@@ -51,7 +53,7 @@ namespace ClientApp
             // Configure the HttpClient with the base address and client certificate
             services.AddHttpClient("MyClient", client =>
             {
-                client.BaseAddress = new Uri($"{serverDNS}:{port}/");
+                client.BaseAddress = new Uri($"{serverURL}:{port}/");
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
@@ -70,11 +72,20 @@ namespace ClientApp
 
             try
             {
-                var response = await client.GetAsync("api/values");
-                response.EnsureSuccessStatusCode();
-                var content = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(content);
-                logger.LogInformation("Request succeeded with response: {Content}", content);
+                // Send GET request
+                var getResponse = await client.GetAsync("api/values");
+                getResponse.EnsureSuccessStatusCode();
+                var getContent = await getResponse.Content.ReadAsStringAsync();
+                Console.WriteLine(getContent);
+                logger.LogInformation("GET request succeeded with response: {Content}", getContent);
+
+                // Send POST request
+                var postContent = new StringContent(JsonConvert.SerializeObject("Hello"), Encoding.UTF8, "application/json");
+                var postResponse = await client.PostAsync("api/values", postContent);
+                postResponse.EnsureSuccessStatusCode();
+                var postResponseContent = await postResponse.Content.ReadAsStringAsync();
+                Console.WriteLine(postResponseContent);
+                logger.LogInformation("POST request succeeded with response: {Content}", postResponseContent);
             }
             catch (Exception ex)
             {
