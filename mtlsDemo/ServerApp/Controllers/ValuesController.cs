@@ -9,7 +9,19 @@ namespace ServerApp.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(new string[] { "Hello", "World!" });
+            return Ok(new string[] { "Hello", "World" });
+        }
+
+        [HttpPost]
+        public IActionResult Post([FromBody] string message)
+        {
+            if (message == "Hello")
+            {
+                return Ok(new { response = "Hello World" });
+            }
+            return BadRequest(new { error = "Invalid message" });
         }
     }
 }
+
+
