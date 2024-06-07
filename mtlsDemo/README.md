@@ -3,6 +3,7 @@
 - Otherwise, there are 2 zip files in 01-Compiled folder which consists of the Server & Client Application. 
 - Both the zip files will contain the executable to demonstrate how mtls works
 
+Certificate Password : password
 # Requirements
 - Windows Based Machine
 
