@@ -24,7 +24,7 @@ namespace ServerApp.Controllers
         {
             if (message == "Hello")
             {
-                return Ok(new { response = "Hello World" });
+                return Ok(new { response = $"Hello World! You sent a Post Request with {message}" });
             }
             return BadRequest(new { error = "Invalid message" });
         }
@@ -42,6 +42,7 @@ namespace ServerApp.Controllers
 
             return Unauthorized(new { error = "Invalid clientId or clientSecret" });
         }
+
     }
 }
 

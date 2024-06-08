@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 namespace ClientApp
@@ -37,6 +39,17 @@ namespace ClientApp
 
             // Use the service
             await UseHttpClient(serviceProvider);
+
+            // Keep the console window open
+            while (true)
+            {
+                ColorConsole.WriteLine("Would you like to exit the application? (Y/N) : ", ConsoleColor.Yellow);
+                var input = Console.ReadLine();
+                if (input.Equals("Y", StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+            }
         }
 
         private static void ConfigureServices(IServiceCollection services, string serverURL, string port, string clientCertPath, string clientCertPassword, string clientId, string clientSecret)
@@ -53,7 +66,7 @@ namespace ClientApp
             });
 
             // Configure the HttpClient with the base address and client certificate
-            services.AddHttpClient("MyClient", client =>
+            services.AddHttpClient("mtlsClient", client =>
             {
                 client.BaseAddress = new Uri($"{serverURL}:{port}/");
                 client.DefaultRequestHeaders.Add("clientId", clientId);
@@ -66,13 +79,35 @@ namespace ClientApp
                     ClientCertificates = { clientCertificate },
                 };
             });
+
+            // Configure the HttpClient for the normal endpoint without client certificate
+            services.AddHttpClient("NormalClient", client =>
+            {
+                client.BaseAddress = new Uri($"{serverURL}:{port}/");
+            });
         }
 
         private static async Task UseHttpClient(IServiceProvider serviceProvider)
         {
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
             var clientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            var client = clientFactory.CreateClient("MyClient");
+            // Create the HTTP Client with the client certificate to present the cert to the server
+            var client = clientFactory.CreateClient("mtlsClient");
+            // Creates a normal HTTP Client without the client certificate
+            var normalClient = clientFactory.CreateClient("NormalClient");
+
+            try
+            {
+                // Send GET request to normal endpoint
+                var normalResponse = await normalClient.GetAsync("api/normal");
+                normalResponse.EnsureSuccessStatusCode();
+                var normalContent = await normalResponse.Content.ReadAsStringAsync();
+                ColorConsole.WriteLog($"GET request to normal endpoint succeeded with response: {normalContent}", LogLevel.Information);
+            }
+            catch (Exception ex)
+            {
+                ColorConsole.WriteLog($"An error occurred while making the request to normal endpoint \nError :  {ex.Message} \nInner Exception : {ex.InnerException.Message}", LogLevel.Error);
+            }
 
             try
             {
@@ -80,28 +115,37 @@ namespace ClientApp
                 var getResponse = await client.GetAsync("api/values");
                 getResponse.EnsureSuccessStatusCode();
                 var getContent = await getResponse.Content.ReadAsStringAsync();
-                Console.WriteLine(getContent);
-                logger.LogInformation("GET request succeeded with response: {Content}", getContent);
+                ColorConsole.WriteLog($"GET request succeeded with response: {getContent}", LogLevel.Information);
+            }
+            catch (Exception ex)
+            {
+                ColorConsole.WriteLog($"An error occurred while making the request to the client certificate endpoint at api/values \n Error :  {ex.Message} \nInner Exception : {ex.InnerException.Message}", LogLevel.Error);
+            }
 
-                // Send POST request
-                var postContent = new StringContent(JsonConvert.SerializeObject("Hello"), Encoding.UTF8, "application/json");
-                var postResponse = await client.PostAsync("api/values", postContent);
-                postResponse.EnsureSuccessStatusCode();
-                var postResponseContent = await postResponse.Content.ReadAsStringAsync();
-                Console.WriteLine(postResponseContent);
-                logger.LogInformation("POST request succeeded with response: {Content}", postResponseContent);
+            try { 
+            // Send POST request
+            var postContent = new StringContent(JsonConvert.SerializeObject("Hello"), Encoding.UTF8, "application/json");
+            var postResponse = await client.PostAsync("api/values", postContent);
+            postResponse.EnsureSuccessStatusCode();
+            var postResponseContent = await postResponse.Content.ReadAsStringAsync();
+            ColorConsole.WriteLog($"POST request succeeded with response: {postResponseContent}", LogLevel.Information);
+            }
+            catch (Exception ex) {
+                ColorConsole.WriteLog($"An error occurred while making the request to the client certificate endpoint at api/values \n Error :  {ex.Message} \nInner Exception : {ex.InnerException.Message}", LogLevel.Error);
+            }
 
+            try {
                 // Send POST request to restricted endpoint
                 var restrictedResponse = await client.PostAsync("api/values/restricted", null);
                 restrictedResponse.EnsureSuccessStatusCode();
                 var restrictedResponseContent = await restrictedResponse.Content.ReadAsStringAsync();
-                Console.WriteLine(restrictedResponseContent);
-                logger.LogInformation("POST to restricted endpoint succeeded with response: {Content}", restrictedResponseContent);
-            }
-            catch (Exception ex)
+                ColorConsole.WriteLog($"POST to restricted endpoint succeeded with response: {restrictedResponseContent}", LogLevel.Information);
+            } catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while making the request");
+                ColorConsole.WriteLog($"An error occurred while making the request to the client certificate endpoint at api/values/restricted \n Error :  {ex.Message} \nInner Exception : {ex.InnerException.Message}", LogLevel.Error);
             }
+
         }
     }
 }
+
