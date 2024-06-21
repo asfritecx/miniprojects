@@ -1,12 +1,5 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Logging;
 
 namespace ServerApp
 {
@@ -35,49 +28,7 @@ namespace ServerApp
                 {
                     listenOptions.UseHttps(certLocation, certPassword, httpsOptions =>
                     {
-                        httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-                        httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
-                        {
-                            var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-
-                            // Validate client certificate
-                            if (errors != SslPolicyErrors.None)
-                            {
-                                logger.LogDebug("Client certificate validation failed: {errors}", errors);
-                                return false;
-                            }
-
-                            // Check if the certificate is issued by a trusted CA
-                            if (cert.Issuer != "CN=ClientRootCA")
-                            {
-                                logger.LogDebug("Client certificate issuer is not trusted: {issuer}", cert.Issuer);
-                                return false;
-                            }
-
-                            // Additional checks
-                            if (cert.NotBefore > DateTime.Now || cert.NotAfter < DateTime.Now)
-                            {
-                                logger.LogDebug("Client certificate is not within its validity period: {notBefore} - {notAfter}", cert.NotBefore, cert.NotAfter);
-                                return false;
-                            }
-
-                            // Check certificate thumbprint
-                            if (cert.Thumbprint != "F0716F80BB221CBC8D0A3348A677B650C72BA90E")
-                            {
-                                logger.LogDebug("Client certificate thumbprint is not valid: {thumbprint}", cert.Thumbprint);
-                                return false;
-                            }
-
-                            // Optionally validate the certificate chain
-                            bool isChainValid = chain.Build(cert);
-                            if (!isChainValid)
-                            {
-                                logger.LogDebug("Client certificate chain validation failed.");
-                                return false;
-                            }
-
-                            return true;
-                        };
+                        httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
                     });
                 });
             });
@@ -86,6 +37,13 @@ namespace ServerApp
 
             // Configure the HTTP request pipeline
             app.UseHttpsRedirection();
+
+            // Use connection logging middleware
+            app.UseMiddleware<ConnectionLoggingMiddleware>();
+
+            // Use custom client certificate middleware
+            app.UseMiddleware<CustomClientCertificateMiddleware>();
+
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
