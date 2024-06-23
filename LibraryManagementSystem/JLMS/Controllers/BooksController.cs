@@ -38,7 +38,7 @@ namespace JLMS.Controllers
 
             if (bookInfo == null)
             {
-                return NotFound();
+                return NoContent();
             }
 
             return View(bookInfo);
