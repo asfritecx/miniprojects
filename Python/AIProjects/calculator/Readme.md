@@ -14,7 +14,7 @@ A simple calculator application built with Python and PySide6 that performs basi
 The application consists of three main components:
 
 1. `calculator.ui` - Qt Designer UI file defining the calculator interface
-2. `ui_calculator.py` - Auto-generated Python code from the UI file
+2. `calculator_ui.py` - Auto-generated Python code from the UI file
 3. `calculator.py` - Main application logic
 
 ### Implementation
@@ -49,10 +49,13 @@ python calculator.py
 
 ## Development
 Created by Jason Tan (Asfritecx) using:
-- DeepSeek R1
+- DeepSeek-R1
+- ChatGPT-o1
+- Claude-Sonnet 3.5
 - VSCode
 - Python 3.10.2
 - PySide6
+- Simpleeval
 - Qt Designer
 - Windows 11
 
@@ -70,4 +73,4 @@ Created by Jason Tan (Asfritecx) using:
 1. Load Project to VSCode
 2. Run `pip install pyinstaller`
 3. Create the .spec file by running `pyinstaller --name=Calculator --onefile --windowed calculator.py`
-4. 
+4. Edit the options required in the `calculator.spec` file and run `pyinstaller calculator.spec`
